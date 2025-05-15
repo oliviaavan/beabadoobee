@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+
+  <title>Chapter 1</title>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: #000;
+    }
+
+    .carousel-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #carousel {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .leave-btn {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      z-index: 9;
+      padding: 20px 40px;
+      font-size: 1.5rem;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+      transform: translate(-50%, -50%);
+    }
+
+    .leave-btn:hover {
+      background: rgba(0, 0, 0, 0.9);
+    }
+
+    #blackOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      z-index: 9999;
+      animation: fadeIn 2s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 1; }
+      100% { opacity: 0; visibility: hidden; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="blackOverlay"></div>
+
+  <div class="carousel-container">
+    <img id="carousel" src="" alt="Carousel Image">
+    <button id="leaveBtn" class="leave-btn">leave the train station</button>
+  </div>
+
+  <script>
+  let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let buffer = null;
+  let source = null;
+
+  fetch('audio/disappearchapter1.wav')
+    .then(r => r.arrayBuffer())
+    .then(a => audioContext.decodeAudioData(a))
+    .then(decodedBuffer => {
+      buffer = decodedBuffer;
+      console.log('Audio loaded. Duration: ' + buffer.duration + 's');
+
+      if (sessionStorage.getItem('playAudio') === 'true') {
+        sessionStorage.removeItem('playAudio');
+        startPlayback();
+      }
+    });
+
+  function startPlayback() {
+    if (source) return;
+    source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.loopStart = 0;
+    source.loopEnd = buffer.duration;
+    source.connect(audioContext.destination);
+
+    audioContext.resume().then(() => {
+      source.start(0);
+      console.log('Audio started automatically.');
+    });
+  }
+
+  document.body.addEventListener('click', function onBodyClick() {
+    if (buffer && !source) {
+      startPlayback();
+      document.body.removeEventListener('click', onBodyClick);
+    }
+  if (source) {
+    console.log('Already playing.');
+    return;
+  }
+
+      source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.loopStart = 0; 
+      source.loopEnd = buffer.duration; 
+
+      source.connect(audioContext.destination);
+      source.start(0);
+
+      document.body.removeEventListener('click', startAudio);
+      console.log('Audio started with loopStart 0 and loopEnd ' + buffer.duration);
+    });
+
+    const images = [];
+    for (let i = 1; i <= 33; i++) {
+      const paddedId = String(i).padStart(3, '0');
+      images.push({ id: paddedId, alt: `Image ${i}` });
+    }
+
+    const carousel = document.getElementById("carousel");
+    const leaveBtn = document.getElementById("leaveBtn");
+
+    let currentIndex = 0;
+    let autoplayInterval = null;
+    let loopInterval = null;
+
+    function showImage(index) {
+      const image = images[index];
+      carousel.src = `images/chapter1/${image.id}risograph.png`;
+      carousel.alt = image.alt;
+    }
+
+    function nextImage() {
+      currentIndex++;
+      if (currentIndex === 27) {
+        stopAutoplay();
+        leaveBtn.style.display = "block";
+      } else if (currentIndex < images.length) {
+        showImage(currentIndex);
+      }
+    }
+
+    function startAutoplay() {
+      autoplayInterval = setInterval(nextImage, 155);
+    }
+
+    function stopAutoplay() {
+      clearInterval(autoplayInterval);
+      autoplayInterval = null;
+    }
+
+    function loopChapter2() {
+      let loopCount = 0;
+      currentIndex = 27;
+
+      loopInterval = setInterval(() => {
+        if (loopCount < 20) {
+          showImage(currentIndex);
+          currentIndex = (currentIndex - 1 + 1) % 6 + 27;
+          loopCount++;
+        } else {
+          clearInterval(loopInterval);
+          moveToChapter2();
+        }
+      }, 155);
+    }
+
+    function moveToChapter2() {
+    sessionStorage.setItem('playChapter2Audio', 'true');
+    window.location.href = "chapter2.html";
+    }
+
+    showImage(currentIndex);
+    startAutoplay();
+
+    leaveBtn.addEventListener("click", () => {
+      leaveBtn.style.display = "none";
+      startAutoplay();
+      loopChapter2();
+    });
+
+    window.addEventListener("load", () => {
+      const overlay = document.getElementById("blackOverlay");
+      setTimeout(() => {
+        overlay.remove();
+      }, 2000);
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Chapter 3</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .interval-container {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+      background: black;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    #intervalImage {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #polaroidBtn2 {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 9;
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    #blackOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      z-index: 9999;
+      animation: fadeIn 2s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 1; }
+      100% { opacity: 0; visibility: hidden; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="blackOverlay"></div>
+
+  <div class="interval-container" id="intervalContainer">
+    <img id="intervalImage" src="" alt="Chapter 5 Image">
+    <img src="images/polaroid/polaroid2.png" alt="Polaroid 2" id="polaroidBtn2">
+  </div>
+
+  <script>
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let audioBuffer = null, audioSource = null;
+
+  function startPlayback() {
+    if (!audioBuffer || audioSource) return;
+    audioSource = audioContext.createBufferSource();
+    audioSource.buffer = audioBuffer;
+    audioSource.loop = true;
+    audioSource.connect(audioContext.destination);
+    audioContext.resume().then(() => {
+      audioSource.start(0);
+      console.log('Chapter 3 audio started.');
+    });
+  }
+
+  fetch('audio/disappearchapter3.wav')
+    .then(r => r.arrayBuffer())
+    .then(arr => audioContext.decodeAudioData(arr))
+    .then(buf => {
+      audioBuffer = buf;
+      console.log('Audio decoded (duration=' + buf.duration + 's).');
+
+      if (sessionStorage.getItem('playChapter3Audio') === 'true') {
+        sessionStorage.removeItem('playChapter3Audio');
+        startPlayback();
+        startImageInterval();  
+      }
+    });
+
+  document.body.addEventListener('click', function once() {
+    startPlayback();
+    document.body.removeEventListener('click', once);
+  });
+
+  const intervalContainer = document.getElementById('intervalContainer');
+  const intervalImage     = document.getElementById('intervalImage');
+  const polaroidBtn2      = document.getElementById('polaroidBtn2');
+
+  const intervalImages = [];
+  for (let i = 67; i <= 78; i++) {
+    intervalImages.push(`images/chapter5/${String(i).padStart(3,'0')}risograph.png`);
+  }
+
+  let idx = 0, timer;
+
+  function showNextImage() {
+    if (idx < intervalImages.length) {
+      intervalImage.src = intervalImages[idx++];
+    } else {
+      clearInterval(timer);
+      polaroidBtn2.style.display = 'block';
+    }
+  }
+
+  function startImageInterval() {
+    intervalContainer.style.display = 'flex';
+    showNextImage();
+    timer = setInterval(showNextImage, 180);
+  }
+
+  polaroidBtn2.addEventListener('click', () => {
+    sessionStorage.setItem('playChapter4Audio', 'true');
+    window.location.href = 'chapter4.html';
+  });
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('blackOverlay').remove();
+      if (!audioSource) startImageInterval();
+    }, 2000);
+  });
+  </script>
+</body>
+
+</html>

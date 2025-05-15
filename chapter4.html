@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+ 
+  <title>Chapter 4</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: black;
+    }
+
+    .interval-container {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    #intervalImage {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    #finalBtn {
+      position: absolute;
+      top: 90%;
+      left: 50%;
+      z-index: 9;
+      padding: 20px 40px;
+      font-size: 1.5rem;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+      transform: translate(-50%, -50%);
+    }
+
+    #finalBtn:hover {
+      background: rgba(0, 0, 0, 0.9);;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="interval-container" id="intervalContainer">
+    <img id="intervalImage" src="" alt="Chapter 4 Image">
+
+    <button
+    id="finalBtn"
+    onclick="
+      sessionStorage.setItem('playChapter5Audio','true');
+      location.href='chapter5.html';
+    "
+  >snap back to reality</button>
+  </div>
+
+  <script>
+  let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let buffer = null;
+  let source = null;
+
+  function startChapter4Audio() {
+    if (!buffer || source) return;
+    source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.loopStart = 0;
+    source.loopEnd = buffer.duration;
+    source.connect(audioContext.destination);
+    source.start(0);
+    console.log('Chapter 4 audio started.');
+  }
+
+  fetch('audio/disappearchapter4.wav')
+    .then(r => r.arrayBuffer())
+    .then(arr => audioContext.decodeAudioData(arr))
+    .then(decoded => {
+      buffer = decoded;
+      console.log('Audio loaded. Duration:', buffer.duration);
+      if (sessionStorage.getItem('playChapter4Audio') === 'true') {
+        sessionStorage.removeItem('playChapter4Audio');
+        startChapter4Audio();
+        startImageInterval();
+      }
+    });
+
+  document.body.addEventListener('click', function onFirstClick() {
+    startChapter4Audio();
+    document.body.removeEventListener('click', onFirstClick);
+  });
+
+  const intervalContainer = document.getElementById("intervalContainer");
+  const intervalImage     = document.getElementById("intervalImage");
+  const finalBtn          = document.getElementById("finalBtn");
+
+  const sequence1 = Array.from({length: 8}, (_, i) => `images/chapter9/${String(i + 96).padStart(3, '0')}risograph.png`);
+  const sequence2 = Array.from({length: 11}, (_, i) => `images/chapter8/${String(i + 85).padStart(3, '0')}risograph.png`);
+  const sequence3 = Array.from({length: 6}, (_, i) => `images/chapter10/${String(i + 104).padStart(3, '0')}risograph.png`);
+  const sequence4 = Array.from({length: 5}, (_, i) => `images/chapter11/${String(i + 110).padStart(3, '0')}risograph.png`);
+  const sequences = [sequence1, sequence2, sequence3, sequence4];
+  let currentSeqIdx = 0, imgIdx = 0, intervalTimer;
+
+  function showIntervalImage() {
+    const seq = sequences[currentSeqIdx];
+    if (imgIdx < seq.length) {
+      if (imgIdx === 0) {
+        intervalImage.style.opacity = 0;
+        setTimeout(() => {
+          intervalImage.src = seq[imgIdx++];
+          intervalImage.onload = () => intervalImage.style.opacity = 1;
+        }, 180);
+      } else {
+        intervalImage.src = seq[imgIdx++];
+      }
+    } else {
+      clearInterval(intervalTimer);
+      currentSeqIdx++;
+      if (currentSeqIdx < sequences.length) {
+        imgIdx = 0;
+        setTimeout(() => intervalTimer = setInterval(showIntervalImage, 180), 250);
+      } else {
+        setTimeout(() => finalBtn.style.display = 'block', 500);
+      }
+    }
+  }
+
+  function startImageInterval() {
+    intervalContainer.style.display = 'flex';
+    intervalTimer = setInterval(showIntervalImage, 180);
+  }
+
+  finalBtn.addEventListener('click', () => {
+    sessionStorage.setItem('playChapter5Audio','true');
+    window.location.href = 'chapter5.html';
+  });
+  </script>
+</body>
+
+</html>
